@@ -467,7 +467,9 @@ function Globe({ albums, name }: { albums: Array<Album>; name: string }) {
 
       <footer className={`tracking-tight content`}>
         <div className="text-sm text-center md:text-right text-gray-400">
-          <p className="m-0 p-0">&copy; {name} {new Date().getFullYear()}</p>
+          <p className="m-0 p-0">
+            &copy; {name} {new Date().getFullYear()}
+          </p>
         </div>
       </footer>
     </section>
