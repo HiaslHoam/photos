@@ -1,17 +1,17 @@
 import dynamic from 'next/dynamic';
 import './globals.css';
-import { getAlbums } from '@/lib/api';
+import { getAlbums, getSiteConfig } from '@/lib/api';
 
 const Globe = dynamic(() => import('@/lib/globes/globe'), {
   ssr: false
 });
 
 export default async function Page() {
-  const albums = await getAlbums();
+  const [albums, config] = await Promise.all([getAlbums(), getSiteConfig()]);
 
   return (
     <main role="main">
-      <Globe albums={albums} />
+      <Globe albums={albums} name={config.name} />
     </main>
   );
 }

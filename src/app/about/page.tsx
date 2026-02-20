@@ -1,47 +1,35 @@
-import { getAlbums } from '@/lib/api';
+import { getAlbums, getSiteConfig } from '@/lib/api';
 import Globe from '@/lib/globes/mini-globe';
 import Nav from '@/lib/nav';
 import Noise from '@/lib/fx/noise';
 import { ExternalLink } from '@/lib/external-link';
+import { SiteConfig } from '@/types';
 
 export async function generateStaticParams() {
   const albums = await getAlbums();
   return albums.map(album => ({ slug: album.title.toLowerCase() }));
 }
 
-function Contact() {
+function Contact({ config }: { config: SiteConfig }) {
   return (
     <div id="contact" className="flex gap-14">
-      <div>
-        <h2 className="uppercase tracking-tight text-sm mb-1 font-light text-gray-500">
-          Socials
-        </h2>
-        <ul className="text-lg font-medium">
-          <li>
-            <ExternalLink href="https://instagram.com/agarunov">
-              Instagram
-            </ExternalLink>
-          </li>
-          <li>
-            <ExternalLink href="https://twitter.com/agarune">
-              Twitter
-            </ExternalLink>
-          </li>
-        </ul>
-      </div>
       <div className="border border-dashed border-gray-300 rounded-lg p-4 -mt-4">
         <h2 className="uppercase tracking-tight text-sm mb-1 font-light text-gray-500">
           Links
         </h2>
         <ul className="text-lg font-medium">
-          <li>
-            <ExternalLink href="https://github.com/agarun/photos">
-              GitHub
-            </ExternalLink>
-          </li>
-          <li>
-            <ExternalLink href="https://agarun.com">Personal Site</ExternalLink>
-          </li>
+          {config.githubUrl && (
+            <li>
+              <ExternalLink href={config.githubUrl}>GitHub</ExternalLink>
+            </li>
+          )}
+          {config.personalSiteUrl && (
+            <li>
+              <ExternalLink href={config.personalSiteUrl}>
+                Personal Site
+              </ExternalLink>
+            </li>
+          )}
         </ul>
       </div>
     </div>
@@ -49,7 +37,7 @@ function Contact() {
 }
 
 async function AboutPage() {
-  const albums = await getAlbums();
+  const [albums, config] = await Promise.all([getAlbums(), getSiteConfig()]);
 
   return (
     <section
@@ -71,21 +59,16 @@ async function AboutPage() {
           w-full relative overflow-hidden`}
       >
         <section className="z-20 relative max-w-96">
-          <h1 className="font-bold text-4xl tracking-tight">Aaron Agarunov</h1>
+          <h1 className="font-bold text-4xl tracking-tight">{config.name}</h1>
           <p className="text-2xl text-gray-700 font-light">
-            <span className="text-gray-300">✦</span> Photography Portfolio
+            <span className="text-gray-300">✦</span> {config.tagline}
           </p>
 
-          <p className="mt-20 mb-6 text-lg">{`
-        I'm a software developer & artist from New York that's super inspired by a lot of different things. Thanks for checking out the site!
-        `}</p>
+          <p className="mt-20 mb-6 text-lg">{config.bio}</p>
 
-          <p className="mb-32 text-lg">
-            The website is open source on GitHub, built with TypeScript and
-            React, and hosted using Pages and Contentful.
-          </p>
+          <p className="mb-32 text-lg">{config.siteDescription}</p>
 
-          <Contact />
+          <Contact config={config} />
         </section>
 
         <Globe

@@ -1,5 +1,5 @@
 import dynamic from 'next/dynamic';
-import { getAlbums, getPhotos } from '@/lib/api';
+import { getAlbums, getPhotos, getSiteConfig } from '@/lib/api';
 import Nav from '@/lib/nav';
 
 const Masonry = dynamic(() => import('@/lib/images/masonry'), {
@@ -15,7 +15,12 @@ export async function generateStaticParams() {
 }
 
 async function Tag({ params: { slug } }: { params: { slug: string } }) {
-  const [albums, photos] = await Promise.all([getAlbums(), getPhotos(slug)]);
+  const [albums, photos, config] = await Promise.all([
+    getAlbums(),
+    getPhotos(slug),
+    getSiteConfig()
+  ]);
+  const quality = config.imageQuality ?? undefined;
 
   return (
     <section className="flex flex-col sm:flex-row sm:my-20">
@@ -32,7 +37,7 @@ async function Tag({ params: { slug } }: { params: { slug: string } }) {
           {slug}
         </div>
 
-        <Masonry className="my-6" items={photos} />
+        <Masonry className="my-6" items={photos} quality={quality} />
       </div>
     </section>
   );

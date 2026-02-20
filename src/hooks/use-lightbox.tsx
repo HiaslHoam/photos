@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import PhotoSwipeLightbox from 'photoswipe/lightbox';
 import 'photoswipe/dist/photoswipe.css';
+import { withQuality } from '@/lib/images/utils';
 
 export interface LightboxData {
   url: string;
@@ -8,19 +9,19 @@ export interface LightboxData {
   height: number;
 }
 
-function selectDataSource(data: Array<LightboxData>) {
+function selectDataSource(data: Array<LightboxData>, quality?: number) {
   return data.map(item => ({
-    url: item.url,
+    url: withQuality(item.url, quality),
     width: item.width,
     height: item.height
   }));
 }
 
-export function useLightbox(data: Array<LightboxData>) {
+export function useLightbox(data: Array<LightboxData>, quality?: number) {
   useEffect(() => {
     let lightbox = new PhotoSwipeLightbox({
       gallery: '#gallery',
-      dataSource: selectDataSource(data),
+      dataSource: selectDataSource(data, quality),
       children: 'a',
       showHideAnimationType: 'zoom',
       pswpModule: () => import('photoswipe'),
@@ -68,5 +69,5 @@ export function useLightbox(data: Array<LightboxData>) {
     return () => {
       lightbox.destroy();
     };
-  }, [data]);
+  }, [data, quality]);
 }

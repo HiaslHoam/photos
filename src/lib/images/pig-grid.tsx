@@ -4,9 +4,16 @@ import { useLightbox } from '@/hooks/use-lightbox';
 import { useWindowSize } from '@/hooks/use-window-size';
 import { Photo } from '@/types';
 import { useEffect } from 'react';
+import { withQuality } from './utils';
 
-function PigGrid({ items }: { items: Array<Photo> }) {
-  useLightbox(items);
+function PigGrid({
+  items,
+  quality
+}: {
+  items: Array<Photo>;
+  quality?: number;
+}) {
+  useLightbox(items, quality);
 
   const { width } = useWindowSize();
 
@@ -23,19 +30,19 @@ function PigGrid({ items }: { items: Array<Photo> }) {
       primaryImageBufferHeight: 1000,
       secondaryImageBufferHeight: 300,
       urlForSize: function (filename: string, size: number) {
-        return filename;
+        return withQuality(filename, quality);
       },
       createElement: function (url: string) {
         // PhotoSwipe elements
         const item = items.find(item => item.url == url) as Photo;
         const anchor = document.createElement('a');
-        anchor.href = url;
+        anchor.href = withQuality(url, quality);
         anchor.setAttribute('data-pswp-width', item.width.toString());
         anchor.setAttribute('data-pswp-height', item.height.toString());
         anchor.target = '_blank';
         anchor.rel = 'noreferrer';
         const img = document.createElement('img');
-        img.src = url;
+        img.src = withQuality(url, quality);
         img.alt = '';
         return anchor;
       },
@@ -85,7 +92,7 @@ function PigGrid({ items }: { items: Array<Photo> }) {
               target="_blank"
               rel="noreferrer"
             >
-              <img src={item.url} alt="" />
+              <img src={withQuality(item.url, quality)} alt="" />
             </a>
           ))}
         </div>

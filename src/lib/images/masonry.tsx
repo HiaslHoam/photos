@@ -1,30 +1,12 @@
 'use client';
 
 import * as React from 'react';
+import { useCallback } from 'react';
 import { Masonry as MasonicMasonry } from 'masonic';
 import { type RenderComponentProps } from 'masonic';
 import { useLightbox } from '../../hooks/use-lightbox';
 import { Photo } from '@/types';
-
-const MasonryItem = ({
-  width: itemWidth,
-  data: { url, width, height }
-}: RenderComponentProps<Photo>) => (
-  <a
-    href={url}
-    data-pswp-width={width}
-    data-pswp-height={height}
-    target="_blank"
-    rel="noreferrer"
-  >
-    <img
-      src={url}
-      width={(width / itemWidth) * width}
-      height={(width / itemWidth) * height}
-      alt=""
-    />
-  </a>
-);
+import { withQuality } from './utils';
 
 function currentColumnWidth() {
   if (window.innerWidth > 2000) {
@@ -55,12 +37,37 @@ function useAverageHeight(items: Array<Photo>, columnWidth: number) {
 
 export const Masonry = ({
   items = [],
+  quality,
   ...props
 }: {
   items: Array<Photo>;
+  quality?: number;
   className?: string;
 }) => {
-  useLightbox(items);
+  useLightbox(items, quality);
+
+  const MasonryItem = useCallback(
+    ({
+      width: itemWidth,
+      data: { url, width, height }
+    }: RenderComponentProps<Photo>) => (
+      <a
+        href={withQuality(url, quality)}
+        data-pswp-width={width}
+        data-pswp-height={height}
+        target="_blank"
+        rel="noreferrer"
+      >
+        <img
+          src={withQuality(url, quality)}
+          width={(width / itemWidth) * width}
+          height={(width / itemWidth) * height}
+          alt=""
+        />
+      </a>
+    ),
+    [quality]
+  );
 
   const columnWidth = currentColumnWidth();
   const averageHeight = useAverageHeight(items, columnWidth);

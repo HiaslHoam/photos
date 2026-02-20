@@ -341,7 +341,7 @@ function useScene(globeElRef: Ref) {
 
 const DEFAULT_AUTOROTATE_SPEED = 1.75;
 
-function Globe({ albums }: { albums: Array<Album> }) {
+function Globe({ albums, name }: { albums: Array<Album>; name: string }) {
   // object config
   const globeEl = useRef<Ref>();
   const globeElRef: Ref = globeEl.current;
@@ -432,7 +432,7 @@ function Globe({ albums }: { albums: Array<Album> }) {
 
       <section className="content-container grow text-3xl">
         <h1 className="font-bold mb-12 sm:mb-20 text-center md:text-left">
-          Aaron Agarunov
+          {name}
         </h1>
 
         <ul
@@ -466,8 +466,8 @@ function Globe({ albums }: { albums: Array<Album> }) {
       {activeAlbum && <AlbumCard album={activeAlbum} />}
 
       <footer className={`tracking-tight content`}>
-        <div className="text-3xl text-center md:text-right">
-          <p className="m-0 p-0">&copy; {new Date().getFullYear()}</p>
+        <div className="text-sm text-center md:text-right text-gray-400">
+          <p className="m-0 p-0">&copy; {name} {new Date().getFullYear()}</p>
         </div>
       </footer>
     </section>

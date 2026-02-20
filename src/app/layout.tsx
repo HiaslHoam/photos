@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import './globals.css';
+import { getSiteConfig } from '@/lib/api';
 
 const sansSerifFont = localFont({
   src: '../fonts/TASAOrbiterVF.woff2',
@@ -8,34 +9,62 @@ const sansSerifFont = localFont({
   variable: '--font-sans'
 });
 
-export const metadata: Metadata = {
-  title: 'Aaron Agarunov',
-  description: 'Photography Portfolio',
-  openGraph: {
-    title: 'Aaron Agarunov',
-    description: 'Photography Portfolio',
-    url: 'https://photos.agarun.com',
-    siteName: "Aaron Agarunov's Photography Portfolio",
-    images: [
-      {
-        url: 'https://images.ctfassets.net/hgydmrrpr52m/51698HSeL6XwsGGkNoevym/fe4b55fbcb4431a6a75f14e6b2ebeb6b/meta_tag_1.jpg',
-        width: 1200,
-        height: 630
-      }
-    ],
-    locale: 'en_US',
-    type: 'website'
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Aaron Agarunov',
-    description: 'Photography Portfolio',
-    creator: '@agarun',
-    images: [
-      'https://images.ctfassets.net/hgydmrrpr52m/51698HSeL6XwsGGkNoevym/fe4b55fbcb4431a6a75f14e6b2ebeb6b/meta_tag_1.jpg'
-    ]
-  }
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const config = await getSiteConfig();
+  const imageUrl = config.metaImage?.url;
+
+  return {
+    title: config.name,
+    description: config.tagline,
+    icons: {
+      icon: [
+        { url: '/favicon.ico' },
+        { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+        { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' }
+      ],
+      apple: [{ url: '/apple-touch-icon.png' }],
+      other: [
+        {
+          rel: 'android-chrome',
+          url: '/android-chrome-192x192.png',
+          sizes: '192x192'
+        },
+        {
+          rel: 'android-chrome',
+          url: '/android-chrome-512x512.png',
+          sizes: '512x512'
+        }
+      ]
+    },
+    openGraph: {
+      title: config.name,
+      description: config.tagline,
+      url: config.siteUrl,
+      siteName: `${config.name}'s Photography Portfolio`,
+      images: imageUrl
+        ? [
+            {
+              url: imageUrl,
+              ...(config.metaImage?.width
+                ? { width: config.metaImage.width }
+                : {}),
+              ...(config.metaImage?.height
+                ? { height: config.metaImage.height }
+                : {})
+            }
+          ]
+        : [],
+      locale: 'en_US',
+      type: 'website'
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: config.name,
+      description: config.tagline,
+      ...(imageUrl ? { images: [imageUrl] } : {})
+    }
+  };
+}
 
 export default function RootLayout({
   children

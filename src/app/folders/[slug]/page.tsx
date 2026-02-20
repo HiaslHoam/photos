@@ -1,4 +1,4 @@
-import { getFolder, getFolders } from '@/lib/api';
+import { getFolder, getFolders, getSiteConfig } from '@/lib/api';
 import { slugToFolderName, titleToSlug } from '@/lib/api/slug';
 import Grid from '@/lib/images/pig-grid';
 import Link from 'next/link';
@@ -10,7 +10,11 @@ export async function generateStaticParams() {
 
 async function Folder({ params: { slug } }: { params: { slug: string } }) {
   const name = slugToFolderName(slug);
-  const { folder, photos } = await getFolder(name);
+  const [{ folder, photos }, config] = await Promise.all([
+    getFolder(name),
+    getSiteConfig()
+  ]);
+  const quality = config.imageQuality ?? undefined;
 
   return (
     <section className="flex flex-col justify-center sm:flex-row sm:my-20 sm:mt-48">
@@ -22,7 +26,7 @@ async function Folder({ params: { slug } }: { params: { slug: string } }) {
           {folder.title}
         </h1>
 
-        <Grid items={photos} />
+        <Grid items={photos} quality={quality} />
 
         <div className="flex justify-between items-center text-gray-400 hover:text-gray-600">
           <a href="#top">↑ Go to top</a>

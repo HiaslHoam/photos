@@ -1,5 +1,5 @@
 import dynamic from 'next/dynamic';
-import { getAlbum, getAlbums } from '@/lib/api';
+import { getAlbum, getAlbums, getSiteConfig } from '@/lib/api';
 import Nav from '@/lib/nav';
 import { titleToSlug, slugToAlbumTitle } from '@/lib/api/slug';
 import { LocationIcon } from '@/lib/icons/location-icon';
@@ -17,8 +17,12 @@ export async function generateStaticParams() {
 async function AlbumPage({ params: { slug } }: { params: { slug: string } }) {
   const albums = await getAlbums();
   const title = slugToAlbumTitle(slug);
-  const { album, photos } = await getAlbum(title);
+  const [{ album, photos }, config] = await Promise.all([
+    getAlbum(title),
+    getSiteConfig()
+  ]);
   const tags = useTags(album);
+  const quality = config.imageQuality ?? undefined;
 
   return (
     <section className="flex flex-col sm:flex-row sm:my-20" id="top">
@@ -51,7 +55,7 @@ async function AlbumPage({ params: { slug } }: { params: { slug: string } }) {
           </div>
         </div>
 
-        <Masonry className="my-12" items={photos} />
+        <Masonry className="my-12" items={photos} quality={quality} />
 
         <a
           href="#top"

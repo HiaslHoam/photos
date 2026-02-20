@@ -1,5 +1,14 @@
 import { Client } from './client';
 
+export async function getSiteConfig() {
+  const client = new Client();
+  const data = await client.siteConfig.get();
+  if (data.success) {
+    return data.data.siteConfigCollection.items[0];
+  }
+  throw new Error('Failed to fetch site config');
+}
+
 export async function getAlbums() {
   const client = new Client();
   const data = await client.albums.get();

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { AlbumSchema, FolderSchema } from '.';
+import { AlbumSchema, FolderSchema, SiteConfigSchema } from '.';
 
 export type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
@@ -77,6 +77,14 @@ export const FolderPhotosResponseSchema = z.object({
           })
         })
       )
+    })
+  })
+});
+
+export const SiteConfigResponseSchema = z.object({
+  data: z.object({
+    siteConfigCollection: z.object({
+      items: z.array(SiteConfigSchema)
     })
   })
 });

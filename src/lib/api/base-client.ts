@@ -49,10 +49,22 @@ export abstract class BaseClient {
       });
 
       const data = await response.json();
+      console.log('[Contentful API response]', JSON.stringify(data, null, 2));
 
-      responseSchema.parse(data);
+      const parsed = responseSchema.safeParse(data);
+      if (!parsed.success) {
+        console.error(
+          '[Contentful schema mismatch]',
+          JSON.stringify(parsed.error.format(), null, 2)
+        );
+        return {
+          success: false,
+          message: parsed.error.message,
+          error: parsed.error
+        };
+      }
 
-      return { ...data, success: true };
+      return { ...parsed.data, success: true };
     } catch (error) {
       console.error(error);
       if (error instanceof z.ZodError) {

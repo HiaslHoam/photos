@@ -5,7 +5,8 @@ import {
   AlbumResponseSchema,
   AssetsResponseSchema,
   FolderPhotosResponseSchema,
-  FolderResponseSchema
+  FolderResponseSchema,
+  SiteConfigResponseSchema
 } from '@/types/api';
 export class Client extends BaseClient {
   albums = new AlbumsClient(this.baseUrl);
@@ -19,6 +20,8 @@ export class Client extends BaseClient {
   folder(slug: string) {
     return new FolderClient(this.baseUrl, slug);
   }
+
+  siteConfig = new SiteConfigClient(this.baseUrl);
 }
 
 export class AlbumsClient extends BaseClient {
@@ -137,6 +140,38 @@ query($tag: String!) {
           return year == tag;
         });
     }
+    return response;
+  }
+}
+
+export class SiteConfigClient extends BaseClient {
+  async get() {
+    const query = `
+query {
+  siteConfigCollection(limit: 1) {
+    items {
+      name
+      tagline
+      siteUrl
+      bio
+      siteDescription
+      githubUrl
+      personalSiteUrl
+      imageQuality
+      metaImage {
+        url
+        width
+        height
+      }
+    }
+  }
+}`;
+
+    const response = await this.request(z.string(), SiteConfigResponseSchema, {
+      method: 'POST',
+      body: JSON.stringify({ query }),
+      next: { tags: ['site-config'], revalidate: false }
+    });
     return response;
   }
 }
