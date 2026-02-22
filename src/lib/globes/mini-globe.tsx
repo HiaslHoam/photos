@@ -52,7 +52,7 @@ export default function Globe({
 }) {
   const markers = useMarkers(albums);
 
-  let phi = -0.75;
+  const phiRef = useRef(-0.75);
   let width = 0;
   let height = 0;
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -83,12 +83,12 @@ export default function Globe({
 
   const onRender = useCallback(
     (state: Record<string, any>) => {
-      if (!pointerInteracting.current) phi += 0.004;
-      state.phi = phi + r.get();
+      if (!pointerInteracting.current) phiRef.current += 0.004;
+      state.phi = phiRef.current + r.get();
       state.width = width * 2;
       state.height = width * 2;
     },
-    [pointerInteracting, phi, r]
+    [r]
   );
 
   const onResize = () => {
@@ -116,6 +116,7 @@ export default function Globe({
           window.innerWidth <= 640 ? '0.5' : '0.85')
     );
     return () => globe.destroy();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canvasRef]);
 
   return (

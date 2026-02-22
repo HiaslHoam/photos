@@ -74,7 +74,7 @@ function PigGrid({
       const pigElement = document.getElementById('pig');
       if (pigElement) pigElement.innerHTML = '';
     };
-  }, [items, width]);
+  }, [items, width, quality]);
 
   const isMobile = width && width <= 640;
 
