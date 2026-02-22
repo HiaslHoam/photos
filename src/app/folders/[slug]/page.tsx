@@ -3,6 +3,9 @@ import { slugToFolderName, titleToSlug } from '@/lib/api/slug';
 import Grid from '@/lib/images/pig-grid';
 import Link from 'next/link';
 
+export const dynamicParams = false;
+export const revalidate = 0;
+
 export async function generateStaticParams() {
   const folders = await getFolders();
   return folders.map(folder => ({ slug: titleToSlug(folder.title) }));

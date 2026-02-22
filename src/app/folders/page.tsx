@@ -27,10 +27,6 @@ async function Folders() {
                 <span className="font-medium tracking-widest">
                   {folder.title}
                 </span>
-                <span className="text-gray-300 mx-5">/</span>
-                <span className="text-gray-400 tracking-tight">
-                  {folder.date}
-                </span>
               </Link>
             </li>
           ))}

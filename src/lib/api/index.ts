@@ -45,7 +45,7 @@ export async function getFolders() {
   const data = await client.folders.get();
   if (data.success) {
     const folders = data.data.photoFoldersCollection.items;
-    return [...folders].sort((a, b) => a.order - b.order);
+    return folders;
   }
   throw new Error('Failed to fetch folders');
 }

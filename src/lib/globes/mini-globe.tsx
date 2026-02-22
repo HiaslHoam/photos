@@ -53,8 +53,8 @@ export default function Globe({
   const markers = useMarkers(albums);
 
   const phiRef = useRef(-0.75);
-  let width = 0;
-  let height = 0;
+  const widthRef = useRef(0);
+  const heightRef = useRef(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const pointerInteracting = useRef(null);
   const pointerInteractionMovement = useRef(0);
@@ -86,16 +86,16 @@ export default function Globe({
     (state: Record<string, any>) => {
       if (!pointerInteracting.current) phiRef.current += 0.004;
       state.phi = phiRef.current + r.get();
-      state.width = width * 2;
-      state.height = width * 2;
+      state.width = widthRef.current * 2;
+      state.height = widthRef.current * 2;
     },
     [r]
   );
 
   const onResize = () => {
     if (canvasRef.current) {
-      width = canvasRef.current.offsetWidth;
-      height = canvasRef.current.offsetHeight;
+      widthRef.current = canvasRef.current.offsetWidth;
+      heightRef.current = canvasRef.current.offsetHeight;
     }
   };
 
@@ -106,8 +106,8 @@ export default function Globe({
     const globe = createGlobe(canvasRef.current!, {
       ...config,
       markers,
-      width: width * 2,
-      height: height * 2,
+      width: widthRef.current * 2,
+      height: heightRef.current * 2,
       onRender
     });
 

@@ -183,10 +183,6 @@ query {
   photoFoldersCollection {
     items {
       title
-      parentTitle
-      description
-      date
-      order
     }
   }
 }`;
@@ -216,10 +212,6 @@ query {
   photoFoldersCollection(where: { title_contains: "${title}" }) {
     items {
       title
-      parentTitle
-      description
-      date
-      order
       photosCollection {
         items {
           size
