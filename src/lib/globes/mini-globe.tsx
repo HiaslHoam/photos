@@ -81,6 +81,7 @@ export default function Globe({
     }
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const onRender = useCallback(
     (state: Record<string, any>) => {
       if (!pointerInteracting.current) phiRef.current += 0.004;

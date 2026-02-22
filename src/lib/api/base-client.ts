@@ -1,6 +1,13 @@
 import { z } from 'zod';
 import { Config, ErrorResponse, SuccessResponse } from '@/types/api';
 
+if (!process.env.CONTENTFUL_SPACE_ID) {
+  throw new Error('Missing environment variable: CONTENTFUL_SPACE_ID');
+}
+if (!process.env.CONTENTFUL_ACCESS_TOKEN) {
+  throw new Error('Missing environment variable: CONTENTFUL_ACCESS_TOKEN');
+}
+
 const defaultBaseUrl = `https://graphql.contentful.com/content/v1/spaces/${process.env.CONTENTFUL_SPACE_ID}`;
 
 function authorizationHeader(preview: boolean | undefined): string {
