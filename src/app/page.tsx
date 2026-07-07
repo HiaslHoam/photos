@@ -7,11 +7,20 @@ const Globe = dynamic(() => import('@/lib/globes/globe'), {
 });
 
 export default async function Page() {
-  const [albums, config] = await Promise.all([getAlbums(), getSiteConfig()]);
+  try {
+    const [albums, config] = await Promise.all([getAlbums(), getSiteConfig()]);
 
-  return (
-    <main role="main">
-      <Globe albums={albums} name={config.name} />
-    </main>
-  );
+    return (
+      <main role="main">
+        <Globe albums={albums} name={config.name} />
+      </main>
+    );
+  } catch (error) {
+    console.error('Error loading page data:', error);
+    return (
+      <main role="main">
+        <div>Error loading page. Check console for details.</div>
+      </main>
+    );
+  }
 }

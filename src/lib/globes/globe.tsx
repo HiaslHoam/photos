@@ -10,6 +10,7 @@ import * as topojson from 'topojson-client';
 import { useWindowSize } from '@/hooks/use-window-size';
 import { Album, AlbumTitle, types } from '@/types/albums';
 import { titleToSlug } from '@/lib/api/slug';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { AlbumCard } from './card';
 
@@ -70,11 +71,12 @@ function usePoints(albums: Array<Album>) {
   const locations = albums.filter(album => album.type === types.LOCATION);
   for (const album of locations) {
     points.push(
-      { lat: album.lat, lng: album.lng, radius: 0.19 },
+      { lat: album.lat, lng: album.lng, radius: 0.19, album },
       ...album.locations.map(location => ({
         lat: location.lat,
         lng: location.lng,
-        radius: 0.135
+        radius: 0.135,
+        album
       }))
     );
   }
@@ -87,10 +89,11 @@ function usePoints(albums: Array<Album>) {
 
 function useRings(
   globeElRef: CustomGlobeMethods,
-  setPointAltitude: React.Dispatch<React.SetStateAction<number>>
+  setPointAltitude: React.Dispatch<React.SetStateAction<number>>,
+  setActiveAlbumTitle: React.Dispatch<
+    React.SetStateAction<AlbumTitle | undefined>
+  >
 ) {
-  const [activeAlbumTitle, setActiveAlbumTitle] = useState<AlbumTitle>();
-
   const [rings, setRings] = useState<Array<Ring>>([]);
   const colorInterpolator = (t: number) =>
     `rgba(255,100,50,${Math.sqrt(1 - t)})`;
@@ -157,7 +160,6 @@ function useRings(
   }
 
   return {
-    activeAlbumTitle,
     rings,
     colorInterpolator,
     handleMouseEnter,
@@ -285,12 +287,13 @@ function useGlobeReady(globeEl: GlobeEl) {
 
   useEffect(() => {
     if (globeReady && globeEl.current) {
-      globeEl.current.controls().enabled = false;
+      const controls = globeEl.current.controls();
+      controls.enabled = true;
 
-      globeEl.current.controls().enableZoom = false;
+      controls.enableZoom = true;
 
-      globeEl.current.controls().autoRotate = true;
-      globeEl.current.controls().autoRotateSpeed = DEFAULT_AUTOROTATE_SPEED;
+      controls.autoRotate = true;
+      controls.autoRotateSpeed = DEFAULT_AUTOROTATE_SPEED;
 
       globeEl.current.pointOfView({ lat: 30, lng: -30, altitude: 2 });
 
@@ -299,6 +302,7 @@ function useGlobeReady(globeEl: GlobeEl) {
   }, [globeEl, globeReady]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
+    globeReady,
     handleGlobeReady: () => setGlobeReady(true)
   };
 }
@@ -345,11 +349,63 @@ function Globe({ albums, name }: { albums: Array<Album>; name: string }) {
   // object config
   const globeEl = useRef<Ref>();
   const globeElRef: Ref = globeEl.current;
+  const router = useRouter();
+  const [activeAlbumTitle, setActiveAlbumTitle] = useState<AlbumTitle>();
 
-  const { handleGlobeReady } = useGlobeReady(globeEl);
+  // hover & interaction state
+  const [hoveringPoint, setHoveringPoint] = useState<boolean>(false);
+  const resumeTimer = useRef<NodeJS.Timeout>();
+
+  const { globeReady, handleGlobeReady } = useGlobeReady(globeEl);
+
+  // when we hover a point, stop auto‑rotate immediately and schedule resume
+  useEffect(() => {
+    if (globeEl.current) {
+      const controls = globeEl.current.controls();
+      if (hoveringPoint) {
+        controls.autoRotate = false;
+        if (resumeTimer.current) clearTimeout(resumeTimer.current);
+      } else {
+        if (resumeTimer.current) clearTimeout(resumeTimer.current);
+        resumeTimer.current = setTimeout(() => {
+          if (!hoveringPoint && globeEl.current) {
+            globeEl.current.controls().autoRotate = true;
+          }
+        }, 2000);
+      }
+    }
+  }, [hoveringPoint]);
 
   // scene config
   useScene(globeElRef);
+
+  // handle user interaction (drag/zoom) cooldown
+  useEffect(() => {
+    if (globeReady && globeEl.current) {
+      const controls = globeEl.current.controls();
+      const stopAuto = () => {
+        controls.autoRotate = false;
+        if (resumeTimer.current) clearTimeout(resumeTimer.current);
+      };
+      const scheduleResume = () => {
+        if (resumeTimer.current) clearTimeout(resumeTimer.current);
+        resumeTimer.current = setTimeout(() => {
+          if (!hoveringPoint && globeEl.current) {
+            globeEl.current.controls().autoRotate = true;
+          }
+        }, 2000);
+      };
+
+      controls.addEventListener('start', stopAuto);
+      controls.addEventListener('end', scheduleResume);
+
+      return () => {
+        controls.removeEventListener('start', stopAuto);
+        controls.removeEventListener('end', scheduleResume);
+        if (resumeTimer.current) clearTimeout(resumeTimer.current);
+      };
+    }
+  }, [globeReady, hoveringPoint]);
 
   // land shapes
   const { landPolygons, polygonMaterial } = useLandPolygons();
@@ -358,13 +414,12 @@ function Globe({ albums, name }: { albums: Array<Album>; name: string }) {
   const { points, pointAltitude, setPointAltitude } = usePoints(albums);
 
   // rings animation
-  const {
-    rings,
-    colorInterpolator,
-    handleMouseEnter,
-    handleMouseLeave,
-    activeAlbumTitle
-  } = useRings(globeElRef as CustomGlobeMethods, setPointAltitude);
+  const { rings, colorInterpolator, handleMouseEnter, handleMouseLeave } =
+    useRings(
+      globeElRef as CustomGlobeMethods,
+      setPointAltitude,
+      setActiveAlbumTitle
+    );
   const activeAlbum = albums.find(album => album.title === activeAlbumTitle);
 
   // arcs animation
@@ -413,8 +468,8 @@ function Globe({ albums, name }: { albums: Array<Album>; name: string }) {
         pointsData={points}
         pointColor={() => 'rgba(255, 0, 0, 0.75)'}
         pointAltitude={pointAltitude}
-        pointRadius={point => (point as { radius: number }).radius}
-        pointsMerge={true}
+        pointRadius={point => (point as { radius: number }).radius * 2}
+        pointsMerge={false}
         ringsData={rings}
         ringColor={() => colorInterpolator}
         ringMaxRadius="maxR"
@@ -428,9 +483,26 @@ function Globe({ albums, name }: { albums: Array<Album>; name: string }) {
         customLayerData={customLayerData}
         customThreeObject={customThreeObject}
         customThreeObjectUpdate={customThreeObjectUpdate}
+        onPointClick={point => {
+          console.log('Point clicked:', point);
+          if ((point as any).album) {
+            router.push(`/${titleToSlug((point as any).album.title)}`);
+          }
+        }}
+        onGlobeClick={() => console.log('Globe clicked')}
+        onPointHover={point => {
+          const title =
+            point && (point as any).album
+              ? (point as any).album.title
+              : undefined;
+          setActiveAlbumTitle(title);
+          const hovering = !!point;
+          setHoveringPoint(hovering);
+          // auto-rotate will be managed by the effect with cooldown
+        }}
       />
 
-      <section className="content-container grow text-3xl">
+      <section className="content-container grow text-3xl absolute top-20 left-0 w-full h-full flex flex-col justify-start items-center md:items-start md:pl-24 lg:pl-36 xl:pl-48 2xl:pl-64">
         <h1 className="font-bold mb-12 sm:mb-20 text-center md:text-left">
           {name}
         </h1>
@@ -465,8 +537,10 @@ function Globe({ albums, name }: { albums: Array<Album>; name: string }) {
 
       {activeAlbum && <AlbumCard album={activeAlbum} />}
 
-      <footer className={`tracking-tight content`}>
-        <div className="text-sm text-center md:text-right text-gray-400">
+      <footer
+        className={`tracking-tight content absolute bottom-0 left-0 w-full`}
+      >
+        <div className="text-sm text-center md:text-right text-gray-400 px-24 lg:px-36 xl:px-48 2xl:px-64">
           <p className="m-0 p-0">
             &copy; {name} {new Date().getFullYear()}
           </p>

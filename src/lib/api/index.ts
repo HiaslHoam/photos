@@ -1,10 +1,33 @@
 import { Client } from './client';
+import { SiteConfig } from '@/types/site-config';
+
+// Default local site configuration for development
+const defaultLocalConfig: SiteConfig = {
+  name: 'Photography Portfolio',
+  tagline: 'Local Development',
+  siteUrl: 'http://localhost:3000',
+  bio: 'Local development configuration',
+  siteDescription: 'Local development configuration',
+  githubUrl: null,
+  personalSiteUrl: null,
+  imageQuality: null,
+  metaImage: null
+};
 
 export async function getSiteConfig() {
+  // Skip CMS when SKIP_CMS is set (for local development)
+  if (process.env.SKIP_CMS === 'true') {
+    return defaultLocalConfig;
+  }
+
   const client = new Client();
   const data = await client.siteConfig.get();
   if (data.success) {
-    return data.data.siteConfigCollection.items[0];
+    const config = data.data.siteConfigCollection.items[0];
+    if (process.env.NODE_ENV === 'development') {
+      config.siteUrl = 'http://localhost:3000';
+    }
+    return config;
   }
   throw new Error('Failed to fetch site config');
 }
